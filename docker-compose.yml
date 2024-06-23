@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  db:
+    container_name: database
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: store17
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  mailhog:
+    container_name: mailhog
+    image: mailhog/mailhog
+    restart: always
+    logging:
+      driver: "none"
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
+  cron:
+    container_name: cron
+    build: ./cron
+    volumes:
+      - ./cron/php:/var/www
+      - ./log/cron:/var/log/cron
+    environment:
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASS=password
+      - DB_NAME=store17
+      - SMTP_HOST=mailhog
+      - SMTP_PORT=1025
+      - SMTP_USERNAME=
+      - SMTP_PASSWORD=
+      - SMTP_AUTH=false
+      - SMTP_SENDER=fake-email@gmail.com
+      - KEY=8Bx7bL8c3QY33PeaPgrJQiAIQkJWU8MR
+      - HOST=http://localhost:8070
+    depends_on:
+      - db
+      - mailhog
+
+  phpmyadmin:
+    container_name: phpmyadmin
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    ports:
+      - "8090:80"
+    environment:
+      - PMA_HOST=db
+      - PMA_USER=root
+      - PMA_PASSWORD=password
+      - PMA_PORT=3306
+      - PMA_ARBITRARY=1
+    depends_on:
+      - db
+
+  download:
+    container_name: download
+    build: ./download
+    ports:
+      - "8070:80"
+    environment:
+      - KEY=8Bx7bL8c3QY33PeaPgrJQiAIQkJWU8MR
+    volumes:
+      - ./download/data:/var/www/html
+
+volumes:
+  db_data:

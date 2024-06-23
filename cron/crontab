@@ -1,0 +1,1 @@
+0 9 * * * php /var/www/send_invoices >> /var/log/cron/cron.log 2>&1
